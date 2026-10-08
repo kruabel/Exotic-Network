@@ -2,8 +2,8 @@ const WebSocket = require('ws');
 const net = require('net');
 
 const PORT = process.env.PORT || 8080;
-const MC_HOST = 'overclock.dathost.net';
-const MC_PORT = 17930;
+const MC_HOST = '170.23.69.191';
+const MC_PORT = 25565;
 
 const wss = new WebSocket.Server({ port: PORT }, () => {
   console.log(`Eagler proxy listening on port ${PORT}`);
@@ -11,7 +11,7 @@ const wss = new WebSocket.Server({ port: PORT }, () => {
 
 wss.on('connection', (ws) => {
   console.log('Client attempting connection...');
-  
+
   const client = net.connect(MC_PORT, MC_HOST, () => {
     console.log('Connected to target Minecraft server');
   });
@@ -25,6 +25,12 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => client.end());
   client.on('close', () => ws.close());
-  ws.on('error', () => client.destroy());
-  client.on('error', () => ws.close());
+  ws.on('error', (err) => {
+    console.log('WebSocket error:', err.message);
+    client.destroy();
+  });
+  client.on('error', (err) => {
+    console.log('TCP error:', err.message);
+    ws.close();
+  });
 });
